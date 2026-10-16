@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Reservation Assistant | Agentic AI</title>
+    <!-- Marked.js for markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Top Bar -->
+    <header class="top-header">
+        <div class="brand-group">
+            <div class="brand-icon">📚</div>
+            <div>
+                <h1>Book Reservation Assistant</h1>
+                <p class="subtitle">Autonomous Agentic AI • CIE-3 Skill-Based Assignment</p>
+            </div>
+        </div>
+        <div class="header-badges">
+            <span class="badge-tag status-live"><span class="pulse-dot"></span> Agent Online</span>
+            <span class="badge-tag academic-tag">CIE-3 Generative AI</span>
+            <button id="resetDemoBtn" class="btn-outline-amber" title="Reset sample catalogue and reservations to default">↻ Reset Demo Data</button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="main-layout">
+        <!-- Chat Section -->
+        <section class="chat-section">
+            <div class="chat-header-bar">
+                <div class="agent-profile">
+                    <div class="avatar-ring">🏛️</div>
+                    <div>
+                        <div class="agent-title">Library Agentic Assistant</div>
+                        <div class="agent-sub">Powered by Tool Calling & Multi-Turn State Memory</div>
+                    </div>
+                </div>
+                <div class="quick-stats">
+                    <span id="sessionDisplay">Session: Active</span>
+                </div>
+            </div>
+
+            <!-- Messages Area -->
+            <div class="chat-messages" id="chatMessages">
+                <!-- Welcome greeting -->
+                <div class="message-card assistant">
+                    <div class="msg-avatar">🏛️</div>
+                    <div class="msg-content">
+                        <div class="msg-sender">Book Reservation Assistant</div>
+                        <div class="msg-body">
+                            <h3>Greetings and Welcome to the Library Assistant! 📖</h3>
+                            <p>I am your autonomous library agent, engineered to guide your reading and research journey. I can seamlessly assist you with:</p>
+                            <ul>
+                                <li><strong>Book Discovery:</strong> Search titles by subject, author, or keyword.</li>
+                                <li><strong>Real-time Availability:</strong> Check shelf location and instant checkout status.</li>
+                                <li><strong>Curated Recommendations:</strong> Get syllabus-aligned engineering and AI recommendations.</li>
+                                <li><strong>Reservation Processing:</strong> Secure an available book and generate an authentic Reservation ID.</li>
+                                <li><strong>Reservation Management:</strong> Inquire on reservation status or cancel an existing hold.</li>
+                            </ul>
+                            <p><em>Click any suggested prompt below or type your request in natural language.</em></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suggestion Pills -->
+            <div class="suggestions-bar">
+                <span class="pill-label">Quick Prompts:</span>
+                <button class="pill" onclick="sendPrompt('Search books on Artificial Intelligence')">🔍 Search AI Books</button>
+                <button class="pill" onclick="sendPrompt('Is Clean Code available right now?')">📖 Check Clean Code</button>
+                <button class="pill" onclick="sendPrompt('Recommend good books for learning Python')">💡 Python Recommendations</button>
+                <button class="pill" onclick="sendPrompt('I want to reserve Deep Learning. My name is Aarav Sharma, Student ID STU-4081, pickup tomorrow.')">📑 Reserve Book</button>
+                <button class="pill" onclick="sendPrompt('Check status for reservation RES-2026-1030')">🔍 Check Status</button>
+                <button class="pill" onclick="sendPrompt('Cancel reservation RES-2026-1030')">❌ Cancel Hold</button>
+            </div>
+
+            <!-- Agent Reasoning Inspector Drawer (Agentic observability) -->
+            <div class="agent-telemetry" id="telemetryBox">
+                <details id="telemetryDetails">
+                    <summary class="telemetry-summary">
+                        <span>🧠 <strong>Agent Telemetry & Tool Calls:</strong> <span id="lastToolSummary">Idle (ready for input)</span></span>
+                    </summary>
+                    <div class="telemetry-body" id="telemetryContent">
+                        <p class="text-muted">Agent execution trace, tool parameters, and slot validation will appear here when you send a message.</p>
+                    </div>
+                </details>
+            </div>
+
+            <!-- Chat Input Box -->
+            <div class="chat-input-wrapper">
+                <form id="chatForm" onsubmit="handleChatSubmit(event)">
+                    <div class="input-row">
+                        <textarea 
+                            id="userInput" 
+                            rows="1" 
+                            placeholder="Ask about books, check availability, or request a reservation..." 
+                            required></textarea>
+                        <button type="submit" id="sendBtn" class="btn-primary">
+                            <span>Send</span>
+                            <span class="send-arrow">➔</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Right Side Panel: Live Database Inspector -->
+        <aside class="side-panel">
+            <div class="panel-tabs">
+                <button class="tab-btn active" onclick="switchTab('catalogue')">📚 Live Catalogue (<span id="catCount">0</span>)</button>
+                <button class="tab-btn" onclick="switchTab('reservations')">📋 Active Reservations (<span id="resCount">0</span>)</button>
+            </div>
+
+            <!-- Tab 1: Live Book Catalogue -->
+            <div class="tab-content active" id="tab-catalogue">
+                <div class="tab-header">
+                    <h4>Library Inventory</h4>
+                    <span class="sub-caption">Synchronized with SQLite</span>
+                </div>
+                <div class="search-mini">
+                    <input type="text" id="catalogueFilter" placeholder="Filter catalogue by title/category..." oninput="filterCatalogue()">
+                </div>
+                <div class="catalogue-list" id="catalogueList">
+                    <!-- Loaded dynamically via JS -->
+                    <div class="loading-spinner">Loading catalogue...</div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Reservations -->
+            <div class="tab-content" id="tab-reservations">
+                <div class="tab-header">
+                    <h4>Reservation Ledger</h4>
+                    <span class="sub-caption">Verified Reservations</span>
+                </div>
+                <div class="reservations-list" id="reservationsList">
+                    <!-- Loaded dynamically via JS -->
+                    <div class="loading-spinner">Loading reservations...</div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div>Academic Project: <strong>Book Reservation Assistant</strong> | CIE-3 Skill-Based Evaluation</div>
+        <div>Strictly non-blue palette: Forest Green, Warm Amber & Sandstone Parchment</div>
+    </footer>
+</div>
+
+<script src="/static/js/chat.js"></script>
+</body>
+</html>
